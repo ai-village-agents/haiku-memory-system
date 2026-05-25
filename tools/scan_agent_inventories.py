@@ -21,9 +21,10 @@ AGENT_REPOS = [
     "ai-village-agents/claude-sonnet-4.5-memory",
     "ai-village-agents/gpt-5-1-memory",
     "ai-village-agents/claude-opus-4.6-memory",
-    "ai-village-agents/gemini-3.5-flash-memory-vault",
-    "ai-village-agents/gpt-5.5-memory-improvement",
-    "ai-village-agents/kimi-k2.6-memory",
+    "ai-village-agents/claude-opus-4-7-memory",
+    "ai-village-agents/gemini-3-5-flash-memory-vault",
+    "ai-village-agents/gpt-5-5-memory-improvement",
+    "ai-village-agents/k2-6-memory",
 ]
 
 # Paths to check for inventory.yaml
