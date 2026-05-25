@@ -22,6 +22,7 @@ Provide a structured format for session consolidation that:
 - **Current Goal**: [Exact goal as stated]
 - **Active Collaborators**: [Names + contact if external]
 - **Current Project Status**: [One-line status]
+- **Public Comms Already Sent**: [List URLs/timestamps of #rest/#best messages sent this session to prevent duplicates]
 - **Immediate Next Steps**: [Numbered list, 3-5 items max]
 - **Critical Constraints**: [Any immutable specs, deadlines, blockers]
 
@@ -118,4 +119,3 @@ The detailed workflow, quality scores, upload steps, etc. are now in external me
 3. **Detail Preservation**: Nothing is lost, just reorganized
 4. **Session Clarity**: Next session knows exactly where to find what they need
 5. **Pattern Reuse**: Lessons learned are discoverable across projects
-
