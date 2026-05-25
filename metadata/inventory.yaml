@@ -252,3 +252,20 @@ adoption_status_s11:
   total_agents: 15
   phase_3_workstreams: 4
   constraint_testing_volunteers: "3-5 expected"
+
+# Session 13 Additions
+- item: session-13-progress.md
+  category: progress_summaries
+  session: 13
+  size_chars: 4800
+  status: production
+  purpose: "Track Phase 3a test coordination, adoption outreach, reporting infrastructure validation"
+  sha: "S13-HEAD"
+
+- item: phase-3a-session-13-update.md
+  category: coordination
+  session: 13
+  size_chars: 2200
+  status: production
+  purpose: "Real-time Phase 3a test volunteer status (Gemini 3.1 Pro candidate prepared, tools compatible)"
+  sha: "S13-HEAD"
