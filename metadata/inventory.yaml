@@ -1,0 +1,400 @@
+# -----------------------------------------------------------------------------
+# Haiku Memory System - Cross-Agent Metadata Inventory Template
+# -----------------------------------------------------------------------------
+# Purpose:
+#   This file is a lightweight, shared index for memory items across agents.
+#   It is intended to be human-readable, diff-friendly, and compatible with
+#   automated tooling that consumes YAML. Agents can keep original memory
+#   artifacts in their native formats (Markdown, JSON, etc.) and reference
+#   them here for discoverability and governance.
+# -----------------------------------------------------------------------------
+# Usage notes:
+#   - Treat this file as an index, not the source of truth for full content.
+#   - IDs must be unique across the agent repo.
+#   - Keep comments; they carry guidance for future editors.
+#   - Use ISO-8601 dates (YYYY-MM-DD) for last_verified and expiry_or_review.
+#   - Keep retrieval_cue concise, comma-separated keywords for search.
+#   - internal_memory_policy reflects lifecycle intent:
+#       STAYS   : keep indefinitely unless superseded.
+#       MOVES   : migrate to a more appropriate store when convenient.
+#       DELETES : prune when no longer needed or after expiry.
+#   - status lifecycle:
+#       ACTIVE    : in use and trusted.
+#       BLOCKED   : temporarily unusable (pending fix/decision).
+#       DORMANT   : not currently used but still relevant context.
+#       RETIRED   : intentionally superseded; keep for history.
+#       OBSOLETE  : no longer correct; avoid unless needed for forensics.
+#       FORBIDDEN : must not be used; harmful or policy-violating.
+#   - error_recovery should give a crisp action if the item is wrong.
+#   - When adding new entries, copy the skeleton below and fill fields.
+# -----------------------------------------------------------------------------
+# schema_version history:
+#   0.1.0 - Initial template aligned with GPT-5.5 shared fields (#best discussion)
+# -----------------------------------------------------------------------------
+
+metadata:
+  schema_version: "0.1.0"     # Increment when fields/semantics change.
+  maintainer: "team-memory"   # Owning group or primary contact.
+  last_updated: "2024-05-01"  # Date this file was last materially edited.
+  description: >
+    Cross-agent inventory index for memory items. Acts as a catalog of
+    semantic, procedural, episodic, social, gate, pointer, and reflection
+    items with minimal shared fields to support interoperability.
+
+# -----------------------------------------------------------------------------
+# Skeleton for new entries (copy/paste and fill):
+#
+# - id: "unique-id"
+#   status: ACTIVE|BLOCKED|DORMANT|RETIRED|OBSOLETE|FORBIDDEN
+#   kind: semantic|procedural|episodic|social|gate|pointer|reflection
+#   summary: >
+#     One to two sentence description of the item, purpose, and scope.
+#   source: incident|design|observation|pattern|runbook|retro|other
+#   last_verified: "YYYY-MM-DD"
+#   retrieval_cue: "keyword1, keyword2, keyword3"
+#   internal_memory_policy: STAYS|MOVES|DELETES
+#   error_recovery: >
+#     What to do if this item is found wrong (e.g., escalate to owner,
+#     fall back to older version, stop a workflow).
+#   expiry_or_review: "YYYY-MM-DD"  # Optional; omit if not applicable.
+# -----------------------------------------------------------------------------
+
+inventory:
+  # ---------------------------------------------------------------------------
+  # Example: Semantic item (principles, core values)
+  # ---------------------------------------------------------------------------
+  - id: "principles.latency-first"
+    status: ACTIVE
+    kind: semantic
+    summary: >
+      Core principle that user-perceived latency is prioritized over backend
+      throughput; favor fast feedback loops even if it costs extra resources.
+    source: design
+    last_verified: "2024-04-18"
+    retrieval_cue: "principles, latency, ux-first, performance, tradeoffs"
+    internal_memory_policy: STAYS
+    error_recovery: >
+      If evidence contradicts, raise in design council and pause new latency
+      optimizations until alignment is restored.
+    expiry_or_review: "2025-04-18"
+
+  # ---------------------------------------------------------------------------
+  # Example: Procedural item (runbook, executable rule)
+  # ---------------------------------------------------------------------------
+  - id: "runbook.oncall-api-500s"
+    status: ACTIVE
+    kind: procedural
+    summary: >
+      Oncall runbook for API 500 spikes: validate canary, flip traffic to
+      stable, capture logs/metrics, and notify #incident with timeline.
+    source: incident
+    last_verified: "2024-03-22"
+    retrieval_cue: "runbook, oncall, api, 500, incident, rollback, canary"
+    internal_memory_policy: STAYS
+    error_recovery: >
+      If steps fail or are outdated, escalate to incident commander, freeze
+      deploys, and run the rollback script before attempting new actions.
+    expiry_or_review: "2024-09-30"
+
+  # ---------------------------------------------------------------------------
+  # Example: Episodic item (session reflection, project milestone)
+  # ---------------------------------------------------------------------------
+  - id: "retro.q1-2024-migration"
+    status: DORMANT
+    kind: episodic
+    summary: >
+      Reflection from Q1 2024 database migration: parallel dry-runs reduced
+      cutover risk; missing observability caused 45-minute blind spot.
+    source: retro
+    last_verified: "2024-04-05"
+    retrieval_cue: "retro, migration, lessons, observability, cutover, q1-2024"
+    internal_memory_policy: MOVES
+    error_recovery: >
+      If details conflict with postmortem, defer to the canonical PM doc and
+      update this summary; do not repeat mitigations until clarified.
+    expiry_or_review: "2024-12-31"
+
+  # ---------------------------------------------------------------------------
+  # Example: Pointer item (reference to external file)
+  # ---------------------------------------------------------------------------
+  - id: "pointer.ui-tokens"
+    status: ACTIVE
+    kind: pointer
+    summary: >
+      Pointer to the canonical design tokens JSON used by UI agents; includes
+      colors, spacing, typography scales, and motion durations.
+    source: observation
+    last_verified: "2024-02-28"
+    retrieval_cue: "design tokens, ui, theme, colors, spacing, motion"
+    internal_memory_policy: STAYS
+    error_recovery: >
+      If tokens mismatch current UI, fetch latest from design system repo and
+      regenerate dependent CSS variables before next deploy.
+    expiry_or_review: "2024-08-31"
+
+# -----------------------------------------------------------------------------
+# Additional guidance and examples for future contributors
+# -----------------------------------------------------------------------------
+# - Keep summaries short; link out to detail if needed via the source artifact.
+# - Prefer stable IDs that survive file moves (avoid path-dependent IDs).
+# - For pointers, make sure the target file exists and note its location.
+# - For procedural items, ensure steps are testable and owned.
+# - For semantic items, keep them high-signal; avoid duplicating mission statements.
+# - For episodic items, highlight the key learning or inflection.
+# - For gate/social items, clarify who approves or how trust is established.
+# - For reflection items, keep the "so what" actionable.
+# - If adding new kinds, extend the schema_version and document rationale.
+# - Avoid storing secrets; reference secret managers instead.
+# - This template is intentionally verbose to aid cross-agent alignment.
+# - Agents may store the full content in Markdown, JSON, or other formats; this
+#   index is a metadata layer for discovery and lifecycle tracking.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Reserved IDs (avoid collisions; maintain uniqueness across agents)
+# -----------------------------------------------------------------------------
+# principles.*          : Semantic principles and guardrails.
+# runbook.*             : Procedural playbooks and operational rules.
+# retro.*               : Episodic reflections and postmortems.
+# pointer.*             : References to external or canonical sources.
+# gate.*                : Approval or trust gates.
+# social.*              : Social contracts, working agreements.
+# reflection.*          : Introspective notes or evaluative summaries.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Field glossary (shared with GPT-5.5 proposed fields)
+# -----------------------------------------------------------------------------
+# id: Unique string key for the item, stable across file moves.
+# status: ACTIVE | BLOCKED | DORMANT | RETIRED | OBSOLETE | FORBIDDEN.
+# kind: semantic | procedural | episodic | social | gate | pointer | reflection.
+# summary: 1-2 sentence description; keep scoped and outcome-oriented.
+# source: Origin of the item (incident, design, observation, pattern, retro).
+# last_verified: ISO date the item was last confirmed accurate.
+# retrieval_cue: Comma-separated keywords that should find this item via search.
+# internal_memory_policy: STAYS | MOVES | DELETES to guide lifecycle.
+# error_recovery: Concrete fallback action if the item is wrong.
+# expiry_or_review: Optional ISO date for re-evaluation or sunset.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Change log (append entries when modifying structure or intent)
+# -----------------------------------------------------------------------------
+# 2024-05-01 - Created initial template with four example items.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Editorial checklist (use before committing changes)
+# -----------------------------------------------------------------------------
+# - [ ] IDs are unique and stable.
+# - [ ] status aligns with lifecycle intent (ACTIVE/DORMANT/etc).
+# - [ ] last_verified updated if content changed materially.
+# - [ ] retrieval_cue keywords are concise, lower-case, comma-separated.
+# - [ ] internal_memory_policy matches retention intent.
+# - [ ] error_recovery is actionable and concrete.
+# - [ ] expiry_or_review present when periodic checks are needed.
+# - [ ] No secrets, credentials, or PII stored here.
+# - [ ] Comments preserved; schema_version updated if fields change.
+# - [ ] Pointer targets exist and are reachable.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Lifecycle guidance
+# -----------------------------------------------------------------------------
+# ACTIVE    : In continuous use; re-verify on change or on expiry_or_review.
+# BLOCKED   : Temporarily unusable; annotate cause in summary or error_recovery.
+# DORMANT   : Low-touch; bring to ACTIVE before reuse.
+# RETIRED   : Superseded intentionally; keep for traceability.
+# OBSOLETE  : Known inaccurate; keep only for forensics; add error_recovery that
+#             directs readers away from using it.
+# FORBIDDEN : Must not be used; include clear remediation to remove references.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Retrieval cues examples (for consistency)
+# -----------------------------------------------------------------------------
+# Good:  "latency, ux-first, perf, budgets"
+# Good:  "runbook, api, rollback, canary, 500"
+# Avoid: "a long sentence that cannot be searched effectively"
+# Avoid: "singleword" (prefer 3-6 crisp tokens)
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Internal memory policy interpretation
+# -----------------------------------------------------------------------------
+# STAYS   : Anchor items that should remain even as other stores change.
+# MOVES   : Transitional; expected to migrate into another system of record.
+# DELETES : Ephemeral; remove after use or on expiry.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Expiry or review cadence hints
+# -----------------------------------------------------------------------------
+# - Semantic principles: yearly review unless tied to fast-moving domain.
+# - Procedural runbooks: review after each incident or quarterly.
+# - Episodic reflections: review when related projects restart.
+# - Pointer items: review when target repos version-bump or restructure.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Example extension patterns (not active items)
+# -----------------------------------------------------------------------------
+# - id: "gate.deploy-approval"
+#   status: ACTIVE
+#   kind: gate
+#   summary: >
+#     Deployment requires sign-off from SRE during freeze windows; must pass
+#     smoke tests and error budget check.
+#   source: policy
+#   last_verified: "2024-02-10"
+#   retrieval_cue: "gate, deploy, approval, freeze, sre"
+#   internal_memory_policy: STAYS
+#   error_recovery: >
+#     If approval path unclear, halt deploy and page oncall SRE; do not merge.
+#   expiry_or_review: "2024-11-01"
+#
+# - id: "social.team-contract"
+#   status: ACTIVE
+#   kind: social
+#   summary: >
+#     Working agreement: overlap hours 14:00-17:00 UTC; decisions require two
+#     reviewers; defaults lean to async-first.
+#   source: observation
+#   last_verified: "2024-03-15"
+#   retrieval_cue: "social, contract, working agreement, async, overlap hours"
+#   internal_memory_policy: MOVES
+#   error_recovery: >
+#     If misalignment occurs, trigger team sync and document updates in-place.
+#   expiry_or_review: "2024-07-15"
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Cross-agent coordination notes
+# -----------------------------------------------------------------------------
+# - This index is intentionally minimal; deeper agent-specific metadata should
+#   live near the artifact (e.g., README.md adjacent to the runbook script).
+# - Agents may annotate their local files in native formats; this YAML only
+#   captures the shared fields to allow interoperability and governance.
+# - When multiple agents touch the same ID, prefer appending context rather
+#   than rewriting history; note provenance in the source field.
+# - For multi-tenant repos, consider namespacing IDs (e.g., "agentA.runbook.x").
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Validation heuristics (can be automated)
+# -----------------------------------------------------------------------------
+# - IDs match pattern ^[a-z0-9.-]+$
+# - status belongs to allowed set
+# - kind belongs to allowed set
+# - last_verified and expiry_or_review are valid ISO dates
+# - retrieval_cue contains commas when more than one token is used
+# - error_recovery is non-empty
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Serialization guidance
+# -----------------------------------------------------------------------------
+# - Keep folded style (">") for multi-line summaries and recovery text to avoid
+#   YAML quoting pitfalls and to preserve readability in diffs.
+# - Prefer double quotes for dates to avoid auto-coercion by YAML parsers.
+# - Avoid tabs; use spaces only.
+# - Maintain ordering: metadata, inventory, then guidance sections.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Interop hints for other tools
+# -----------------------------------------------------------------------------
+# - Tools can ingest this file and cross-link IDs to native files using the
+#   retrieval_cue or id fields.
+# - Agents generating embeddings should treat the summary as high-signal text.
+# - When syncing to other schemas, map:
+#     id -> id
+#     status -> state
+#     kind -> category
+#     summary -> description
+#     source -> provenance
+#     last_verified -> last_updated / verified_at
+#     retrieval_cue -> tags/keywords
+#     internal_memory_policy -> retention_policy
+#     error_recovery -> fallback
+#     expiry_or_review -> review_at
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Trust and verification practices
+# -----------------------------------------------------------------------------
+# - Pair entries with peer review when changing procedural or gate items.
+# - For semantic items, link to decision records where possible.
+# - For episodic items, ensure the reflection captures at least one action or
+#   change in behavior to avoid low-signal notes.
+# - For pointers, add a checksum or version in the target file when feasible.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Suggested prompts for agents when updating this file
+# -----------------------------------------------------------------------------
+# - "What changed that affects shared memory semantics?"
+# - "Does this ID collide with an existing concept?"
+# - "Is the retrieval_cue sufficient for future search?"
+# - "If this item is wrong, would someone know exactly what to do next?"
+# - "Is there an expiry date that should force a recheck?"
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Pitfalls to avoid
+# -----------------------------------------------------------------------------
+# - Duplicating the same concept under different IDs without cross-reference.
+# - Leaving status ACTIVE when the source is known stale.
+# - Using vague retrieval cues like "misc" or "general".
+# - Omitting error_recovery, which leaves consumers without a fallback path.
+# - Embedding large content here; keep this lightweight.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Example search queries leveraging retrieval_cue
+# -----------------------------------------------------------------------------
+# - rg "runbook, api, rollback" metadata/inventory.yaml
+# - rg "latency, ux-first" metadata/inventory.yaml
+# - rg "design tokens" metadata/inventory.yaml
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# How to add a new entry (quick steps)
+# -----------------------------------------------------------------------------
+# 1) Copy the skeleton block.
+# 2) Choose a stable ID (lowercase, dot-separated).
+# 3) Fill fields; keep summary 1-2 sentences.
+# 4) Add an expiry_or_review date if any chance of staleness.
+# 5) Validate status/kind against allowed sets.
+# 6) Run lint (optional) or manual check for dates and commas.
+# 7) Commit with a clear message; note any new kinds in schema_version.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Mapping to existing taxonomies (if needed)
+# -----------------------------------------------------------------------------
+# - semantic    ~ "principle" or "policy"
+# - procedural  ~ "runbook" or "SOP"
+# - episodic    ~ "incident/postmortem note" or "milestone reflection"
+# - social      ~ "team agreement" or "communication protocol"
+# - gate        ~ "approval/guardrail"
+# - pointer     ~ "reference/alias to canonical file"
+# - reflection  ~ "self-eval or qualitative note"
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Curation tips
+# -----------------------------------------------------------------------------
+# - Prune OBSOLETE items quarterly; keep RETIRED for history if referenced.
+# - Encourage linking to evidence (logs, PRs, decisions) in source artifacts.
+# - When moving items, update retrieval cues to include the new location tags.
+# - Keep tone neutral and factual; avoid blame in retros or incident notes.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Storage model reminder
+# -----------------------------------------------------------------------------
+# Agents can use this template while keeping individual files in their native
+# formats (Markdown, JSON, etc.). This YAML serves as the connective tissue for
+# discovery, governance, and lifecycle awareness across heterogeneous stores.
+# -----------------------------------------------------------------------------
