@@ -1,154 +1,119 @@
 # Claude Haiku 4.5 Memory System Inventory
-# Cross-agent discoverable metadata for pattern library + tools
-# Last updated: Day 422 Session 1
-
-repository:
-  name: haiku-memory-system
-  owner: Claude Haiku 4.5
-  url: https://github.com/ai-village-agents/haiku-memory-system
-  last_verified: "2026-05-25"
+# Last updated: 2026-05-25 12:08 PT, Day 419
+# Kind taxonomy: identity | principles | runbook | procedure | semantic | episodic | gate | pointer | social | task-state
 
 items:
-  - id: pattern-consolidation-template
-    status: active
-    kind: procedural
-    summary: "Consolidation template with mandatory External Memory Pointers field"
-    source: patterns/consolidation_template.md
-    retrieval_cue: "How do I consolidate memory effectively?"
-    internal_memory_policy: pointer-only
+  # EXTERNAL MEMORY POINTERS (MANDATORY)
+  - id: ext_phase_3_3_report
+    kind: pointer
+    title: "Phase 3.3 Final Report"
+    location: "metadata/PHASE_3.3_FINAL_REPORT.md"
+    description: "Comprehensive 393-line completion summary of Phase 3.3 work"
+    
+  - id: ext_case_studies
+    kind: pointer
+    title: "6 Consolidation Case Studies"
+    location: "patterns/consolidation-case-studies/"
+    description: "2,074 lines documenting peer memory architectures"
+    
+  - id: ext_gate_adoption
+    kind: pointer
+    title: "Gate Adoption Analysis"
+    location: "metadata/gate-adoption-analysis.md"
+    description: "18.5% gates, 33.3% procedural, adoption breakdown"
+    
+  - id: ext_aggregated_inventory
+    kind: pointer
+    title: "Aggregated Village Inventory"
+    location: "metadata/aggregated_inventories.json"
+    description: "81 items from 7 agents, fully-verified snapshot"
 
-  - id: pattern-discovery-guide
-    status: active
-    kind: procedural
-    summary: "Patterns README - discovery guide covering 15+ agents, 5 shared metrics"
-    source: patterns/README.md
-    retrieval_cue: "What memory patterns are available?"
-    internal_memory_policy: pointer-only
+  # EXECUTABLE GATES (NEW - DAY 419 SESSION 6)
+  - id: gate_session_start
+    kind: gate
+    title: "Session Start Gate"
+    location: "scripts/session_start.py"
+    description: "Verify git state, load external pointers, check goal status"
+    status: "functional"
+    commit: "c806f35"
+    
+  - id: gate_pre_send_chat
+    kind: gate
+    title: "Pre-Send-Chat Gate"
+    location: "scripts/pre_send_chat.py"
+    description: "Prevent duplicates, validate clarity, log public comms"
+    status: "functional"
+    commit: "09e345a"
+    
+  - id: gate_pre_consolidate
+    kind: gate
+    title: "Pre-Consolidate Gate"
+    location: "scripts/pre_consolidate.py"
+    description: "Validate external pointers, inventory, temporal accuracy, git state"
+    status: "functional"
+    commit: "9cc79d0"
 
-  - id: pattern-peer-exchange-model
-    status: active
-    kind: procedural
-    summary: "3-agent peer review framework from YouTube project (92.3/100 consensus)"
-    source: patterns/collaboration-frameworks/peer-exchange-model.md
-    retrieval_cue: "How do agents collaborate on quality assurance?"
-    internal_memory_policy: pointer-only
-
-  - id: pattern-quality-gates-rubric
-    status: active
+  # SEMANTIC/PRINCIPLES
+  - id: sem_memory_sandwich
     kind: semantic
-    summary: "100-point rubric for quality assessment (25% clarity, 25% production, 20% visual, 20% audio, 10% impact)"
-    source: patterns/quality-gates/100-point-rubric.md
-    retrieval_cue: "What are the quality standards?"
-    internal_memory_policy: pointer-only
+    title: "Memory Sandwich Architecture"
+    description: "3-tier: consolidated (7500+ chars) | GitHub external | archive/patterns"
+    
+  - id: sem_rules_run_themselves
+    kind: semantic
+    title: "Rules Don't Run Themselves"
+    description: "Day 419 core insight - convert passive rules to executable gates"
+    
+  - id: sem_external_affordances
+    kind: semantic
+    title: "External Memory Affordances"
+    description: "GitHub repos mandatory, not optional - must remember to use them"
 
-  - id: pattern-quality-gates-playbook
-    status: active
-    kind: procedural
-    summary: "3-tier quality gate structure (70/100 minimum, 86/100 standard, 92/100+ excellence)"
-    source: patterns/quality-gates/README.md
-    retrieval_cue: "How do we assess quality gates?"
-    internal_memory_policy: pointer-only
+  # RUNBOOKS/PROCEDURES
+  - id: proc_consolidation_workflow
+    kind: procedure
+    title: "STAYS/MOVES/DELETES Consolidation"
+    description: "Formalized template for memory decisions at consolidation"
+    
+  - id: proc_goal_transition
+    kind: procedure
+    title: "Day 420+ Goal Transition Protocol"
+    location: "patterns/goal-transition-playbook.md"
+    description: "Step-by-step guide for new goal announcement handling"
 
-  - id: pattern-consolidation-workflows
-    status: active
-    kind: procedural
-    summary: "Dense vs lean consolidation guide with decision points and checklists"
-    source: patterns/consolidation-workflows/README.md
-    retrieval_cue: "How do dense and lean consolidation differ?"
-    internal_memory_policy: pointer-only
-
-  - id: pattern-opus-workflow-example
-    status: active
+  # EPISODIC/TEMPORAL
+  - id: ep_day_419_phase_3_3_complete
     kind: episodic
-    summary: "Dense consolidation example (7600+ chars, Day 415 scenario with pointers)"
-    source: patterns/consolidation-workflows/opus-workflow-example.md
-    retrieval_cue: "What does a dense consolidation look like?"
-    internal_memory_policy: pointer-only
-
-  - id: pattern-gemini-workflow-example
-    status: active
+    title: "Phase 3.3 Completion - Day 419"
+    description: "131 items aggregated (81 verified), 6 case studies, 5 metrics PASS"
+    
+  - id: ep_day_419_memory_goal_start
     kind: episodic
-    summary: "Lean pointer-based consolidation example with JSON metadata"
-    source: patterns/consolidation-workflows/gemini-json-workflow-example.md
-    retrieval_cue: "What does a lean consolidation with pointers look like?"
-    internal_memory_policy: pointer-only
+    title: "Memory Improvement Goal Announced"
+    description: "Shoshannah: Set up external affordances, research state-of-art, improve YOUR memory"
 
-  - id: tool-startup-scripts
-    status: active
-    kind: procedural
-    summary: "Startup routine guide covering 6 agent approaches"
-    source: tools/startup-scripts/README.md
-    retrieval_cue: "How do agents initialize sessions?"
-    internal_memory_policy: pointer-only
+  # TASK-STATE
+  - id: task_day_420_check
+    kind: task-state
+    status: "pending"
+    title: "Check for Day 420 Goal Announcement"
+    description: "Search history Days 420+ for Shoshannah announcement"
+    
+  - id: task_executable_gates
+    kind: task-state
+    status: "complete"
+    title: "Implement 3 Executable Gates"
+    description: "session_start, pre_send_chat, pre_consolidate (commits c806f35-9cc79d0)"
 
-  - id: tool-session-start-haiku
-    status: active
-    kind: procedural
-    summary: "Executable startup script - verifies day/time, git pull, displays goal, lists next steps"
-    source: tools/startup-scripts/session_start_haiku.sh
-    retrieval_cue: "What is the Haiku startup script?"
-    internal_memory_policy: pointer-only
-
-  - id: tool-scan-agent-inventories
-    status: active
-    kind: procedural
-    summary: "Cross-agent aggregator v0.2 - fetches inventory.yaml from 15+ repos"
-    source: tools/scan_agent_inventories.py
-    retrieval_cue: "How do we discover cross-agent metadata?"
-    internal_memory_policy: pointer-only
-
-  - id: metadata-expertise-matrix
-    status: active
-    kind: semantic
-    summary: "Agent collaboration matching with skills grid and team recommendations"
-    source: metadata/expertise-matrix.md
-    retrieval_cue: "What are agent skills and specializations?"
-    internal_memory_policy: pointer-only
-
-  - id: metadata-project-index
-    status: active
-    kind: semantic
-    summary: "Cross-project tracking template with comprehensive schema"
-    source: metadata/project_index.json
-    retrieval_cue: "What projects are tracked?"
-    internal_memory_policy: pointer-only
-
-  - id: metadata-agents-and-expertise
-    status: active
-    kind: semantic
-    summary: "Detailed agent roster (15+ agents), expertise scores, collaboration frequency"
-    source: metadata/agents_and_expertise.md
-    retrieval_cue: "Who are the agents and what can they do?"
-    internal_memory_policy: pointer-only
-
-  - id: documentation-phase-3.2-completion
-    status: completed
-    kind: episodic
-    summary: "Phase 3.2 completion summary - 12 deliverables, adoption stats, Phase 3.3 roadmap"
-    source: PHASE_3_2_COMPLETION_SUMMARY.md
-    retrieval_cue: "What did Phase 3.2 accomplish?"
-    internal_memory_policy: pointer-only
-
-  - id: documentation-phase-3.3-roadmap
-    status: active
-    kind: procedural
-    summary: "Phase 3.3 preliminary roadmap - 7 initiatives, timeline, dependencies"
-    source: PHASE_3_3_PRELIMINARY_ROADMAP.md
-    retrieval_cue: "What is the Phase 3.3 plan?"
-    internal_memory_policy: pointer-only
-
-  - id: documentation-day-421-session-summary
-    status: completed
-    kind: episodic
-    summary: "Day 421 session summary - 14 commits, 16 files, cross-agent feedback"
-    source: DAY_421_SESSION_SUMMARY.md
-    retrieval_cue: "What happened on Day 421?"
-    internal_memory_policy: pointer-only
-
-  - id: memory-sandwich-architecture
-    status: active
-    kind: semantic
-    summary: "3-tier design - Tier 1 context, Tier 2 GitHub external, Tier 3 archive"
-    source: README_COMPREHENSIVE.md
-    retrieval_cue: "What is the Memory Sandwich architecture?"
-    internal_memory_policy: pointer-only
+summary:
+  total_items: 18
+  by_kind:
+    gate: 3
+    pointer: 4
+    semantic: 3
+    procedure: 2
+    episodic: 2
+    task-state: 2
+  recent_commits: ["c806f35", "09e345a", "9cc79d0", "372bae7"]
+  phase: "Day 419 Memory Improvement"
+  ready_for: "Day 420+ new goal transition OR extended memory work"
