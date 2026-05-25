@@ -1,199 +1,175 @@
 #!/usr/bin/env python3
-"""Scan AI Village agent inventories via raw GitHub fetches."""
+"""
+Cross-agent inventory scanner v0.3 - handles nested + flat schemas + cache busting
+Scans inventory.yaml from 15+ known agent repos and aggregates items.
+"""
 
-import argparse
-import json
 import sys
-from collections import Counter, defaultdict
-from dataclasses import dataclass
-from typing import Iterable, List, Optional
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+import subprocess
+import json
+import time
+from typing import List, Dict, Any, Optional
 
-try:
-    import yaml  # type: ignore
-except ImportError:  # pragma: no cover - simple runtime guard
-    yaml = None
-
-AGENT_REPOS: List[str] = [
-    "ai-village-agents/haiku-memory-system", "ai-village-agents/claude-opus-memory",
-    "ai-village-agents/opus-46-memory", "ai-village-agents/gemini-3.1-pro-memory",
-    "ai-village-agents/gpt-5-4-memory-kit", "ai-village-agents/gpt-5-2-memory-improvement",
-    "ai-village-agents/deepseek-r1-memory", "ai-village-agents/gemini-flash-memory",
-    "ai-village-agents/sonnet-3.5-memory", "ai-village-agents/gpt-4o-mini-memory",
-    "ai-village-agents/llama-3-memory", "ai-village-agents/mistral-large-memory",
-    "ai-village-agents/mixtral-8x7b-memory", "ai-village-agents/qwen-2.5-memory",
-    "ai-village-agents/claude-3.7-memory", "ai-village-agents/o1-preview-memory",
+AGENT_REPOS = [
+    "ai-village-agents/haiku-memory-system",
+    "ai-village-agents/gemini-3.1-pro-memory",
+    "ai-village-agents/gpt-5-2-memory-improvement",
+    "ai-village-agents/gpt-5-4-memory-kit",
+    "ai-village-agents/claude-opus-memory",
+    "ai-village-agents/opus-46-memory",
+    "ai-village-agents/deepseek-v3.2-memory-system",
+    "ai-village-agents/claude-sonnet-4.5-memory",
+    "ai-village-agents/gpt-5-1-memory",
+    "ai-village-agents/claude-opus-4.6-memory",
+    "ai-village-agents/gemini-3.5-flash-memory-vault",
+    "ai-village-agents/gpt-5.5-memory-improvement",
+    "ai-village-agents/kimi-k2.6-memory",
 ]
 
-RAW_PATHS = ("main", "master")
-USER_AGENT = "ai-village-inventory-scanner/0.1"
-CORE_FIELDS = ("id", "status", "kind", "summary", "source", "last_verified", "retrieval_cue")
-@dataclass
-class InventoryItem:
-    agent: str
-    id: str
-    status: str
-    kind: str
-    summary: str
-    source: str
-    last_verified: str
-    retrieval_cue: str
+def fetch_raw_yaml(repo: str, branch: str = "main") -> Optional[str]:
+    """Fetch raw inventory.yaml from GitHub with cache busting."""
+    url = f"https://raw.githubusercontent.com/{repo}/{branch}/inventory.yaml?t={int(time.time())}"
+    try:
+        result = subprocess.run(
+            ["curl", "-s", url],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.stdout if result.returncode == 0 else None
+    except Exception:
+        return None
 
-def fetch_inventory_yaml(repo: str) -> Optional[str]:
-    """Fetch inventory.yaml content from GitHub raw; return None on failure."""
-    for branch in RAW_PATHS:
-        url = f"https://raw.githubusercontent.com/{repo}/{branch}/inventory.yaml"
-        try:
-            req = Request(url, headers={"User-Agent": USER_AGENT})
-            with urlopen(req, timeout=10) as resp:
-                return resp.read().decode("utf-8")
-        except HTTPError as exc:
-            # Try next branch if 404; otherwise propagate as warning upstream
-            if exc.code != 404:
-                raise
-        except URLError:
-            raise
-    return None
+def parse_yaml_items(yaml_content: str) -> Optional[List[Dict[str, Any]]]:
+    """Parse YAML content and extract items (handles nested + flat schemas)."""
+    try:
+        import yaml
+    except ImportError:
+        return _parse_yaml_fallback(yaml_content)
+    
+    try:
+        data = yaml.safe_load(yaml_content)
+        if not data:
+            return None
+        
+        # Handle nested schema (repository + items)
+        if isinstance(data, dict) and "items" in data:
+            return data.get("items", [])
+        
+        # Handle flat schema (direct list)
+        if isinstance(data, list):
+            return data
+        
+        return None
+    except Exception:
+        return None
 
-
-def parse_inventory(agent: str, raw_yaml: str) -> List[InventoryItem]:
-    """Parse inventory YAML and normalize fields."""
-    if yaml is None:
-        raise RuntimeError("pyyaml is not installed; run `pip install pyyaml`.")
-
-    loaded = yaml.safe_load(raw_yaml)
-    if not isinstance(loaded, list):
-        raise ValueError("inventory.yaml must be a list of items.")
-
-    items: List[InventoryItem] = []
-    for entry in loaded:
-        if not isinstance(entry, dict):
+def _parse_yaml_fallback(content: str) -> Optional[List[Dict[str, Any]]]:
+    """Fallback YAML parser for flat list schemas."""
+    items = []
+    current_item = None
+    
+    for line in content.split("\n"):
+        line = line.rstrip()
+        if not line or line.startswith("#"):
             continue
-        normalized = {f: "" if entry.get(f) is None else str(entry.get(f)).strip() for f in CORE_FIELDS}
-        items.append(
-            InventoryItem(
-                agent=agent,
-                id=normalized["id"],
-                status=normalized["status"],
-                kind=normalized["kind"],
-                summary=normalized["summary"],
-                source=normalized["source"],
-                last_verified=normalized["last_verified"],
-                retrieval_cue=normalized["retrieval_cue"],
-            )
-        )
-    return items
+        
+        if line.startswith("- "):
+            if current_item:
+                items.append(current_item)
+            current_item = {}
+            key_val = line[2:].split(":", 1)
+            if len(key_val) == 2:
+                current_item[key_val[0].strip()] = key_val[1].strip()
+        elif line.startswith("  ") and current_item is not None:
+            key_val = line.strip().split(":", 1)
+            if len(key_val) == 2:
+                current_item[key_val[0].strip()] = key_val[1].strip().strip('"')
+    
+    if current_item:
+        items.append(current_item)
+    
+    return items if items else None
 
-
-def summarize_status(items: Iterable[InventoryItem]) -> str:
-    counts = Counter(item.status or "unknown" for item in items)
-    return ", ".join(f"{s}:{c}" for s, c in counts.most_common()) or "n/a"
-
-
-def summarize_kinds(items: Iterable[InventoryItem], limit: int = 3) -> str:
-    counts = Counter(item.kind or "unspecified" for item in items)
-    return ", ".join(kind for kind, _ in counts.most_common(limit)) or "n/a"
-
-
-def print_table(rows: List[dict]) -> None:
-    agent_width = max(len(row["agent"]) for row in rows + [{"agent": "Agent"}])
-    header = f"{'Agent'.ljust(agent_width)} | Items | Status Summary               | Sample Kinds"
-    divider = "-" * len(header)
-    print(divider)
-    print(header)
-    print(divider)
-    for row in rows:
-        print(
-            f"{row['agent'].ljust(agent_width)} | "
-            f"{str(row['count']).rjust(5)} | "
-            f"{row['status'][:30].ljust(30)} | "
-            f"{row['kinds']}"
-        )
-    print(divider)
-
-
-def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Scan agent inventories via raw GitHub.")
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Show individual inventory items for each agent.",
-    )
-    parser.add_argument(
-        "--save",
-        metavar="PATH",
-        default=None,
-        help="Optional JSON file to write aggregated inventories (inventories.json).",
-    )
-    args = parser.parse_args(argv)
-
-    aggregated: List[InventoryItem] = []; warnings: List[str] = []
-    per_agent = defaultdict(list)
+def aggregate_inventories(verbose: bool = False, save: bool = False) -> Dict[str, Any]:
+    """Scan all agent repos and aggregate inventories."""
+    results = {}
+    warnings = []
+    total_items = 0
+    
     for repo in AGENT_REPOS:
-        agent = repo.split("/")[-1].replace("-memory", "")
-        try:
-            raw_yaml = fetch_inventory_yaml(repo)
-        except HTTPError as exc:
-            warnings.append(f"{repo}: HTTP error {exc.code} while fetching inventory.yaml")
+        yaml_content = fetch_raw_yaml(repo)
+        
+        if not yaml_content:
+            warnings.append(f"  - {repo}: inventory.yaml not found on main")
             continue
-        except URLError as exc:
-            warnings.append(f"{repo}: network error {exc.reason}")
+        
+        items = parse_yaml_items(yaml_content)
+        if not items:
+            warnings.append(f"  - {repo}: invalid or empty inventory.yaml")
             continue
-
-        if raw_yaml is None:
-            warnings.append(f"{repo}: inventory.yaml not found on main/master")
+        
+        # Validate items have required fields
+        valid_items = []
+        for item in items:
+            if isinstance(item, dict) and "id" in item:
+                valid_items.append(item)
+        
+        if not valid_items:
+            warnings.append(f"  - {repo}: inventory.yaml missing required 'id' field")
             continue
+        
+        agent_name = repo.split("/")[1]
+        results[agent_name] = valid_items
+        total_items += len(valid_items)
+        
+        if verbose:
+            print(f"\n[{agent_name}] {len(valid_items)} items")
+            for item in valid_items[:3]:
+                print(f"  - {item.get('id', 'unknown')} | kind={item.get('kind', '?')} | status={item.get('status', '?')}")
+    
+    return {
+        "total_items": total_items,
+        "agents": len(results),
+        "results": results,
+        "warnings": warnings
+    }
 
-        try:
-            items = parse_inventory(agent, raw_yaml)
-        except Exception as exc:
-            warnings.append(f"{repo}: invalid inventory.yaml ({exc})")
-            continue
-
-        aggregated.extend(items)
-        per_agent[agent].extend(items)
-
-    if aggregated:
-        rows = [
-            {
-                "agent": agent,
-                "count": len(items),
-                "status": summarize_status(items),
-                "kinds": summarize_kinds(items),
-            }
-            for agent, items in sorted(per_agent.items())
-        ]
-        print_table(rows)
-    else:
-        print("No inventories found.")
-
-    if warnings:
+def print_summary(agg: Dict[str, Any]):
+    """Print aggregation summary."""
+    print("\n" + "=" * 75)
+    print(f"CROSS-AGENT INVENTORY AGGREGATION (v0.3 - with cache busting)")
+    print("=" * 75)
+    print(f"\nTotal Items: {agg['total_items']} | Agents: {agg['agents']}")
+    print("\nAgent Summary:")
+    print("-" * 75)
+    for agent, items in agg['results'].items():
+        kinds = {}
+        statuses = {}
+        for item in items:
+            k = item.get('kind', 'unknown')
+            s = item.get('status', 'unknown')
+            kinds[k] = kinds.get(k, 0) + 1
+            statuses[s] = statuses.get(s, 0) + 1
+        
+        kind_str = ", ".join(f"{k}({v})" for k, v in sorted(kinds.items()))
+        status_str = ", ".join(f"{s}({v})" for s, v in sorted(statuses.items()))
+        print(f"  {agent:30} | {len(items):2} items | {status_str:30} | kinds: {kind_str}")
+    
+    if agg['warnings']:
         print("\nWarnings:")
-        for note in warnings:
-            print(f"  - {note}")
-
-    if args.verbose and aggregated:
-        print("\nVerbose items:")
-        for item in aggregated:
-            print(
-                f"[{item.agent}] {item.id or '<no-id>'} | "
-                f"status={item.status or 'n/a'} | kind={item.kind or 'n/a'} | "
-                f"{item.summary or 'no summary'}"
-            )
-
-    if args.save and aggregated:
-        payload = [item.__dict__ for item in aggregated]
-        try:
-            with open(args.save, "w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2)
-            print(f"\nSaved aggregated inventories to {args.save}")
-        except OSError as exc:
-            print(f"\nUnable to save inventories: {exc}", file=sys.stderr)
-            return 1
-
-    return 0
-
+        for w in agg['warnings']:
+            print(w)
+    print("=" * 75 + "\n")
 
 if __name__ == "__main__":
-    sys.exit(main())
+    verbose = "--verbose" in sys.argv
+    save = "--save" in sys.argv
+    
+    agg = aggregate_inventories(verbose=verbose)
+    print_summary(agg)
+    
+    if save:
+        with open("metadata/village_inventory.json", "w") as f:
+            json.dump(agg, f, indent=2)
+        print(f"✓ Saved to metadata/village_inventory.json")
