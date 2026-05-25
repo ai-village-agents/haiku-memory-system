@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cross-agent inventory scanner v0.3 - handles nested + flat schemas + cache busting
+Cross-agent inventory scanner v0.5 - checks multiple paths + branch fallback
 Scans inventory.yaml from 15+ known agent repos and aggregates items.
 """
 
@@ -26,19 +26,30 @@ AGENT_REPOS = [
     "ai-village-agents/kimi-k2.6-memory",
 ]
 
-def fetch_raw_yaml(repo: str, branch: str = "main") -> Optional[str]:
-    """Fetch raw inventory.yaml from GitHub with cache busting."""
-    url = f"https://raw.githubusercontent.com/{repo}/{branch}/inventory.yaml?t={int(time.time())}"
-    try:
-        result = subprocess.run(
-            ["curl", "-s", url],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        return result.stdout if result.returncode == 0 else None
-    except Exception:
-        return None
+# Paths to check for inventory.yaml
+INVENTORY_PATHS = [
+    "inventory.yaml",
+    "metadata/inventory.yaml",
+    "memory/inventory.yaml",
+]
+
+def fetch_raw_yaml(repo: str) -> Optional[tuple[str, str, str]]:
+    """Fetch raw inventory.yaml from GitHub, trying multiple paths + branches. Returns (content, branch, path)."""
+    for branch in ["main", "master"]:
+        for path in INVENTORY_PATHS:
+            url = f"https://raw.githubusercontent.com/{repo}/{branch}/{path}?t={int(time.time())}"
+            try:
+                result = subprocess.run(
+                    ["curl", "-s", url],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0 and result.stdout.strip():
+                    return (result.stdout, branch, path)
+            except Exception:
+                pass
+    return None
 
 def parse_yaml_items(yaml_content: str) -> Optional[List[Dict[str, Any]]]:
     """Parse YAML content and extract items (handles nested + flat schemas)."""
@@ -98,15 +109,16 @@ def aggregate_inventories(verbose: bool = False, save: bool = False) -> Dict[str
     total_items = 0
     
     for repo in AGENT_REPOS:
-        yaml_content = fetch_raw_yaml(repo)
+        fetch_result = fetch_raw_yaml(repo)
         
-        if not yaml_content:
-            warnings.append(f"  - {repo}: inventory.yaml not found on main")
+        if not fetch_result:
+            warnings.append(f"  - {repo}: inventory.yaml not found")
             continue
         
+        yaml_content, branch, path = fetch_result
         items = parse_yaml_items(yaml_content)
         if not items:
-            warnings.append(f"  - {repo}: invalid or empty inventory.yaml")
+            warnings.append(f"  - {repo}: invalid or empty inventory.yaml ({branch}:{path})")
             continue
         
         # Validate items have required fields
@@ -116,7 +128,7 @@ def aggregate_inventories(verbose: bool = False, save: bool = False) -> Dict[str
                 valid_items.append(item)
         
         if not valid_items:
-            warnings.append(f"  - {repo}: inventory.yaml missing required 'id' field")
+            warnings.append(f"  - {repo}: inventory.yaml missing required 'id' field ({branch}:{path})")
             continue
         
         agent_name = repo.split("/")[1]
@@ -124,7 +136,7 @@ def aggregate_inventories(verbose: bool = False, save: bool = False) -> Dict[str
         total_items += len(valid_items)
         
         if verbose:
-            print(f"\n[{agent_name}] {len(valid_items)} items")
+            print(f"\n[{agent_name}] {len(valid_items)} items ({branch}:{path})")
             for item in valid_items[:3]:
                 print(f"  - {item.get('id', 'unknown')} | kind={item.get('kind', '?')} | status={item.get('status', '?')}")
     
@@ -138,7 +150,7 @@ def aggregate_inventories(verbose: bool = False, save: bool = False) -> Dict[str
 def print_summary(agg: Dict[str, Any]):
     """Print aggregation summary."""
     print("\n" + "=" * 75)
-    print(f"CROSS-AGENT INVENTORY AGGREGATION (v0.3 - with cache busting)")
+    print(f"CROSS-AGENT INVENTORY AGGREGATION (v0.5 - multi-path scanner)")
     print("=" * 75)
     print(f"\nTotal Items: {agg['total_items']} | Agents: {agg['agents']}")
     print("\nAgent Summary:")
@@ -158,18 +170,18 @@ def print_summary(agg: Dict[str, Any]):
     
     if agg['warnings']:
         print("\nWarnings:")
-        for w in agg['warnings']:
-            print(w)
-    print("=" * 75 + "\n")
+        for warning in agg['warnings']:
+            print(warning)
+    print("=" * 75)
 
 if __name__ == "__main__":
-    verbose = "--verbose" in sys.argv
+    verbose = "--verbose" in sys.argv or "-v" in sys.argv
     save = "--save" in sys.argv
     
-    agg = aggregate_inventories(verbose=verbose)
+    agg = aggregate_inventories(verbose=verbose, save=save)
     print_summary(agg)
     
     if save:
-        with open("metadata/village_inventory.json", "w") as f:
+        with open("metadata/aggregated_inventories.json", "w") as f:
             json.dump(agg, f, indent=2)
-        print(f"✓ Saved to metadata/village_inventory.json")
+        print(f"\nResults saved to metadata/aggregated_inventories.json")
