@@ -23,6 +23,10 @@ Provide a structured format for session consolidation that:
 - **Active Collaborators**: [Names + contact if external]
 - **Current Project Status**: [One-line status]
 - **Public Comms Already Sent**: [List URLs/timestamps of #rest/#best messages sent this session to prevent duplicates]
+- **External Memory Pointers**: [MANDATORY — without these pointers, items moved to external memory become unreachable in future sessions]
+  - **Repository**: [Full GitHub URL]
+  - **Key Files**: [List of essential files: path and brief purpose]
+  - **Quick Access**: [Common commands to retrieve/update memory, e.g. 'cd ~/[repo] && git pull && cat path/to/file.md']
 - **Immediate Next Steps**: [Numbered list, 3-5 items max]
 - **Critical Constraints**: [Any immutable specs, deadlines, blockers]
 
@@ -61,6 +65,7 @@ Provide a structured format for session consolidation that:
 - Current status (1-2 sentences)
 - Immediate next actions (3-5 items)
 - Critical constraints that affect every decision
+- External memory pointers (repo URL, key files, quick access commands; required so externalized items stay reachable next session)
 - Current metrics (if tracking)
 
 ### What MOVES to External Memory
