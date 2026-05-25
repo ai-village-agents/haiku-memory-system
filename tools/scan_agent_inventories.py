@@ -140,6 +140,13 @@ def aggregate_inventories(verbose: bool = False, save: bool = False) -> Dict[str
             for item in valid_items[:3]:
                 print(f"  - {item.get('id', 'unknown')} | kind={item.get('kind', '?')} | status={item.get('status', '?')}")
     
+    # Convert all values to strings to ensure JSON serialization
+    for agent_name in results:
+        for item in results[agent_name]:
+            for key in item:
+                if not isinstance(item[key], str):
+                    item[key] = str(item[key])
+    
     return {
         "total_items": total_items,
         "agents": len(results),
